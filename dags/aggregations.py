@@ -25,10 +25,7 @@ from pyspark.sql.types import StructType,StructField, StringType, IntegerType
 
 FILE_PATH = '/opt/airflow/generatedData'
 
-spark = SparkSession \
-        .builder \
-        .appName("Capstone Final Project") \
-        .getOrCreate()
+
 
 
 with DAG("data_generation", start_date=datetime(2022,1,1),
@@ -47,19 +44,20 @@ with DAG("data_generation", start_date=datetime(2022,1,1),
             op_kwargs={"size":100},
             dag=dag,
         )
-        sensor_triggered_dag = TriggerDagRunOperator(
-            task_id='RDBMS_generation',
-            trigger_dag_id='rdbms_Generator')
+        rdbms_generator = PythonOperator(
+            task_id="rdbms_generator",
+            python_callable= dataGenerators.rdbmsGeneration,
+            op_kwargs={"size":100},
+            dag=dag,
+        )
 
         
     
     pull_dataframes = PythonOperator(
             task_id="pull_dataframes",
             python_callable= pysparkModules.pullDataframe_Pg,
-            op_args=[spark],
+            op_kwargs={"table_names":["customer","transaction"]},
             trigger_rule='all_success'
         )
 
-    sensor_triggered_dag
-        
     process_results>>pull_dataframes

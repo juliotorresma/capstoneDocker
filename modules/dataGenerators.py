@@ -18,11 +18,34 @@ from airflow.hooks.postgres_hook import PostgresHook
 
 FILE_PATH = '/opt/airflow/generatedData'
 
-def insertQueries(size):
-
-    conn = psycopg2.connect(database="airflow", user='airflow', password='airflow', host='host.docker.internal', port= '5432')
-        #Creating a cursor object using the cursor() method
+def rdbmsGeneration(size):
+    #Establishing the connection
+    conn = psycopg2.connect(
+    database="airflow", user='airflow', password='airflow', host='host.docker.internal', port= '5432')
+    #Creating a cursor object using the cursor() method
     cursor = conn.cursor()
+
+    #Doping Transaction table if already exists.
+    cursor.execute("DROP TABLE IF EXISTS transaction")
+    #Creating table as per requirement
+    sql ='''CREATE TABLE transaction(
+    id INT PRIMARY KEY,
+    Customer_id INT,
+    Transaction_ts CHAR(30),
+    Amount INT)
+    '''
+    cursor.execute(sql)
+    cursor.execute("DROP TABLE IF EXISTS customer")
+    #Creating table as per requirement
+    sql ='''CREATE TABLE customer(
+    id INT PRIMARY KEY,
+    FIRST_NAME CHAR(30) NOT NULL,
+    LAST_NAME CHAR(30),
+    Phone_number CHAR(30),
+    Address CHAR(40)
+    )'''
+    cursor.execute(sql)
+
     
     id_list_transaction = utils.randomlistID(size + 101, size)
     id_list_costumer = utils.randomlistID(1, size)

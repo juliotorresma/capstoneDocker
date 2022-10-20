@@ -70,11 +70,21 @@ def writeToCsv(df):
     #df.write.format("csv").mode("overwrite").save("filename.csv")
     pass
 
-def pullDataframe_Pg(spark):
-    df = spark.read. format("jdbc" ).option("url","jdbc:postgresql://localhost:5432/dezyre new")\
-        .option("dtable","customer") \
-        .option("user","airflow").option("password","airflow").load()
+def pullDataframe_Pg(table_names):
+
+    spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
+    for table_name in table_names:
+
+        df = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
+            .option("driver", "org.postgresql.Driver")\
+            .option("dbtable",table_name).option("user","airflow").option("password","airflow").load()
+        
+
+        df.write.mode("overwrite").parquet(f"/opt/airflow/generatedData/{table_name}.parquet")
+
+
+    
     
     logging.info(df.show(5))
     
-    return df
+    

@@ -51,14 +51,15 @@ with DAG("data_generation", start_date=datetime(2022,1,1),
             task_id='RDBMS_generation',
             trigger_dag_id='rdbms_Generator')
 
-        sensor_triggered_task = ExternalTaskSensor(
-            task_id='Terminated_RDBMS',
-            poke_interval=10,
-            timeout=180,
-            soft_fail=False,
-            external_dag_id='rdbms_Generator',
-            external_task_id='insert_values')
-
-    sensor_triggered_dag>>sensor_triggered_task
         
-    process_results
+    
+    pull_dataframes = PythonOperator(
+            task_id="pull_dataframes",
+            python_callable= pysparkModules.pullDataframe_Pg,
+            op_args=[spark],
+            trigger_rule='all_success'
+        )
+
+    sensor_triggered_dag
+        
+    process_results>>pull_dataframes

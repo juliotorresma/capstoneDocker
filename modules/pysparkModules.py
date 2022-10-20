@@ -1,6 +1,7 @@
 import findspark
 import functools
 import os
+import logging
 from pathlib import Path # Find certain directories.
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
@@ -36,7 +37,7 @@ def deleteFiles(path, extension):
         os.remove(path_to_file)
     return 
 
-def turnToDF(file, format_of_filelist):
+def turnToDF(spark, file, format_of_filelist):
     
     if format_of_filelist == "json": 
         df = spark.read.json(str(file)) 
@@ -68,3 +69,12 @@ def sum_amount_transactions(df):
 def writeToCsv(df):
     #df.write.format("csv").mode("overwrite").save("filename.csv")
     pass
+
+def pullDataframe_Pg(spark):
+    df = spark.read. format("jdbc" ).option("url","jdbc:postgresql://localhost:5432/dezyre new")\
+        .option("dtable","customer") \
+        .option("user","airflow").option("password","airflow").load()
+    
+    logging.info(df.show(5))
+    
+    return df

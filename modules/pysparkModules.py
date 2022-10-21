@@ -51,8 +51,8 @@ def turnToDF(spark, file, format_of_filelist):
     elif format_of_filelist == "csv": 
         df =spark.read.options(header='True', inferSchema='True', delimiter=';').csv(file)
 
-    df.printSchema()
-    df.show()
+    #df.printSchema()
+    #df.show()
     
     return df
 
@@ -83,7 +83,7 @@ def pullDataframe_Pg(spark, table_names):
         df = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
             .option("driver", "org.postgresql.Driver")\
             .option("dbtable",table_name).option("user","airflow").option("password","airflow").load()
-        df.write.parquet(f"/opt/airflow/dataFrames/{table_name}.parquet")
+        df.write.parquet(f"/opt/airflow/dataFrames/{table_name}")
     
     
     logging.info(df.show(5))
@@ -96,7 +96,7 @@ def pullExtraFormatDataframes(spark, extra_formats):
             logging.info(os.path.splitext(file))
             df = turnToDF(spark, file, format)
             file_name = file.split('/')[-1]
-            df.write.parquet(f"/opt/airflow/dataFrames/{file_name.split('.')[0]}_{format}.parquet")
+            df.write.parquet(f"/opt/airflow/dataFrames/{file_name.split('.')[0]}_{format}")
         print(filelist)
 
 def pullDataframes(table_names, extra_formats):
@@ -110,23 +110,14 @@ def pullDataframes(table_names, extra_formats):
 
 def dataframesUnification():
     spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
-    unified_df = spark.createDataFrame([],  StructType([
-                                        StructField('id', StringType(), True),
-                                        StructField('customer_id', StringType(), True),
-                                        StructField('ts', StringType(), True),
-                                        StructField('customer_first_name',  StringType(), True),
-                                        StructField('customer_last_name', StringType(), True),
-                                        StructField('phone_number', StringType(), True),
-                                        StructField('address', StringType(), True),
-                                        StructField('transaction_type', StringType(), True),
-                                        StructField('store_id', StringType(), True),
-                                        StructField('amount', IntegerType(), True)]))
+    
     
     pathlist = list( Path(DATAFRAMES_FILE_PATH).glob(f'**/*.parquet') )
     filelist = [str(file) for file in pathlist]
+    logging.info(filelist)
     for file in filelist:
         logging.info(os.path.splitext(file))
-        df = turnToDF(spark, file, format)
+        df = turnToDF(spark, file, 'parquet')
         df = renameColumns(df)
 
     spark.stop()

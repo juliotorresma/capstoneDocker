@@ -56,6 +56,8 @@ def rdbmsGeneration(size):
     phones = utils.generatePhoneNumbers(size)
     address = utils.randomCities(size)
 
+    
+
     logging.info(phones)
 
     for i in range(size):
@@ -113,3 +115,10 @@ def jsonDataGenerator(size):
             f.write(json_line)
             f.write('\n')
     return 
+
+def mainGenerator(size):
+    jsonDataGenerator(size)
+    parquetDataGenerator(size)
+    rdbmsGeneration(size)
+     
+

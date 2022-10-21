@@ -1,5 +1,6 @@
 import os
 import random
+import shutil
 import datetime
 from random import shuffle, seed
 from faker.providers.person.en import Provider
@@ -70,3 +71,11 @@ def deleteFiles(path, extension):
         path_to_file = os.path.join(directory, file)
         os.remove(path_to_file)
     return 
+
+def emptyDirectory(dir):
+    for files in os.listdir(dir):
+        path = os.path.join(dir, files)
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            os.remove(path) 

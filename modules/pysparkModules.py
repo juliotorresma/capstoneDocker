@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(1, '/opt/airflow/modules')
+import utils
 import findspark
 import functools
 import os
@@ -6,6 +9,8 @@ from pathlib import Path # Find certain directories.
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
 from pyspark.sql.types import StructType,StructField, StringType, IntegerType
+DATAFRAMES_FILE_PATH = '/opt/airflow/dataFrames'
+RAW_DATA_FILE_PATH = '/opt/airflow/generatedData'
 
 findspark.init()
 findspark.find()
@@ -70,21 +75,58 @@ def writeToCsv(df):
     #df.write.format("csv").mode("overwrite").save("filename.csv")
     pass
 
-def pullDataframe_Pg(table_names):
+def pullDataframe_Pg(spark, table_names):
 
-    spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
+    utils.emptyDirectory(DATAFRAMES_FILE_PATH)
+
     for table_name in table_names:
-
         df = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
             .option("driver", "org.postgresql.Driver")\
             .option("dbtable",table_name).option("user","airflow").option("password","airflow").load()
-        
-
-        df.write.mode("overwrite").parquet(f"/opt/airflow/generatedData/{table_name}.parquet")
-
-
+        df.write.parquet(f"/opt/airflow/dataFrames/{table_name}.parquet")
     
     
     logging.info(df.show(5))
     
+def pullExtraFormatDataframes(spark, extra_formats):
+    for format in extra_formats:
+        pathlist = list( Path(RAW_DATA_FILE_PATH).glob(f'**/*.{format}') )
+        filelist = sorted( [str(file) for file in pathlist] )
+        for file in filelist:
+            logging.info(os.path.splitext(file))
+            df = turnToDF(spark, file, format)
+            file_name = file.split('/')[-1]
+            df.write.parquet(f"/opt/airflow/dataFrames/{file_name.split('.')[0]}_{format}.parquet")
+        print(filelist)
+
+def pullDataframes(table_names, extra_formats):
+
+    spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
     
+    pullDataframe_Pg(spark, table_names)
+    pullExtraFormatDataframes(spark, extra_formats)
+
+    spark.stop()
+
+def dataframesUnification():
+    spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
+    unified_df = spark.createDataFrame([],  StructType([
+                                        StructField('id', StringType(), True),
+                                        StructField('customer_id', StringType(), True),
+                                        StructField('ts', StringType(), True),
+                                        StructField('customer_first_name',  StringType(), True),
+                                        StructField('customer_last_name', StringType(), True),
+                                        StructField('phone_number', StringType(), True),
+                                        StructField('address', StringType(), True),
+                                        StructField('transaction_type', StringType(), True),
+                                        StructField('store_id', StringType(), True),
+                                        StructField('amount', IntegerType(), True)]))
+    
+    pathlist = list( Path(DATAFRAMES_FILE_PATH).glob(f'**/*.parquet') )
+    filelist = [str(file) for file in pathlist]
+    for file in filelist:
+        logging.info(os.path.splitext(file))
+        df = turnToDF(spark, file, format)
+        df = renameColumns(df)
+
+    spark.stop()

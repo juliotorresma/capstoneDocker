@@ -24,40 +24,30 @@ from pyspark.sql import functions as f
 from pyspark.sql.types import StructType,StructField, StringType, IntegerType
 
 FILE_PATH = '/opt/airflow/generatedData'
-
-
-
+SIZE = 100
 
 with DAG("data_generation", start_date=datetime(2022,1,1),
     schedule_interval="@once", catchup=False) as dag:
 
-    with TaskGroup(group_id="Data_Generation") as process_results:
-        json_generator = PythonOperator(
-            task_id="json_generator",
-            python_callable= dataGenerators.jsonDataGenerator,
-            op_kwargs={"size":100},
-            dag=dag,
-        )
-        parquet_generator = PythonOperator(
-            task_id="parquet_generator",
-            python_callable= dataGenerators.parquetDataGenerator,
-            op_kwargs={"size":100},
-            dag=dag,
-        )
-        rdbms_generator = PythonOperator(
-            task_id="rdbms_generator",
-            python_callable= dataGenerators.rdbmsGeneration,
-            op_kwargs={"size":100},
-            dag=dag,
-        )
+   
+    dataMainGeneration = PythonOperator(
+        task_id="dataMainGeneration",
+        python_callable= dataGenerators.mainGenerator,
+        op_kwargs={"size":SIZE},
+        dag=dag
+    )
 
-        
-    
     pull_dataframes = PythonOperator(
             task_id="pull_dataframes",
-            python_callable= pysparkModules.pullDataframe_Pg,
-            op_kwargs={"table_names":["customer","transaction"]},
+            python_callable= pysparkModules.pullDataframes,
+            op_kwargs={"table_names":["customer","transaction"],"extra_formats":["json","parquet"]},
+            trigger_rule='all_success'
+        )
+    dataframes_unification = PythonOperator(
+            task_id="dataframes_unification",
+            python_callable= pysparkModules.dataframesUnification,
+            op_kwargs={},
             trigger_rule='all_success'
         )
 
-    process_results>>pull_dataframes
+    dataMainGeneration>>pull_dataframes>>dataframes_unification

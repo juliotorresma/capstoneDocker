@@ -67,6 +67,7 @@ x-airflow-common:
     - ./modules:/opt/airflow/modules
     - ./generatedData:/opt/airflow/generatedData
     - ./drivers:/opt/airflow/drivers
+    - ./dataFrames:/opt/airflow/dataFrames
     
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

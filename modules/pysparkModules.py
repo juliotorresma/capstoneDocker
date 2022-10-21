@@ -1,12 +1,14 @@
+from pickle import NONE
 import sys
 sys.path.insert(1, '/opt/airflow/modules')
 import utils
 import findspark
+from functools import reduce
 import functools
 import os
 import logging
 from pathlib import Path # Find certain directories.
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
 from pyspark.sql.types import StructType,StructField, StringType, IntegerType
 DATAFRAMES_FILE_PATH = '/opt/airflow/dataFrames'
@@ -61,8 +63,8 @@ def renameColumns(df):
         for field in df.schema.fields:
             if str(field.name).lower() in aka_dictionary[official_schema_field]:
                 df = df.withColumnRenamed(field.name, official_schema_field)
-    df.printSchema()
-    df.show()
+    #df.printSchema()
+    #df.show()
     return df
 
 def count_amount_transactions(df):
@@ -79,14 +81,18 @@ def pullDataframe_Pg(spark, table_names):
 
     utils.emptyDirectory(DATAFRAMES_FILE_PATH)
 
-    for table_name in table_names:
-        df = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
-            .option("driver", "org.postgresql.Driver")\
-            .option("dbtable",table_name).option("user","airflow").option("password","airflow").load()
-        df.write.parquet(f"/opt/airflow/dataFrames/{table_name}")
     
+    df1 = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
+        .option("driver", "org.postgresql.Driver")\
+        .option("dbtable",table_names[0]).option("user","airflow").option("password","airflow").load()
     
-    logging.info(df.show(5))
+    df2 = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
+        .option("driver", "org.postgresql.Driver")\
+        .option("dbtable",table_names[1]).option("user","airflow").option("password","airflow").load()
+
+    merged = df1.join(df2, "id")
+
+    merged.write.parquet(f"/opt/airflow/dataFrames/add_date")
     
 def pullExtraFormatDataframes(spark, extra_formats):
     for format in extra_formats:
@@ -97,27 +103,53 @@ def pullExtraFormatDataframes(spark, extra_formats):
             df = turnToDF(spark, file, format)
             file_name = file.split('/')[-1]
             df.write.parquet(f"/opt/airflow/dataFrames/{file_name.split('.')[0]}_{format}")
-        print(filelist)
+        #print(filelist)
 
-def pullDataframes(table_names, extra_formats):
+def pullUnifyDataframes(table_names, extra_formats):
 
     spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
     
     pullDataframe_Pg(spark, table_names)
     pullExtraFormatDataframes(spark, extra_formats)
+    dataframesUnification(spark)
 
     spark.stop()
 
-def dataframesUnification():
-    spark = SparkSession.builder.config('spark.jars', '/opt/airflow/drivers/postgresql-42.5.0.jar').getOrCreate()
-    
-    
+def aggregations(unified_df):
+    #Count and sum amount transactions for each type (online or offline(in store)) for day
+    trns_4_trans_type = unified_df.select('transaction_type','amount').where(unified_df.transaction_type.isNotNull())
+
+    #Count and sum amount transactions for each city (city can be extracted from address) for day
+    trns_4_address = unified_df.select('address','amount').where(unified_df.address != 'null')
+
+    #Count and sum amount transactions for each store for day
+    trns_4_store = unified_df.select('store_id','amount').where(unified_df.store_id.isNotNull())
+
+    sum_trans_type_df = trns_4_trans_type.groupBy('transaction_type').agg(f.sum("amount"),f.count("transaction_type"))
+    sum_trans_type_df.show()
+
+    trns_4_store_df = trns_4_store.groupBy('store_id').agg(f.sum("amount"),f.count("store_id"))
+    trns_4_store_df.show()
+
+    trns_4_different_address_df = trns_4_address.groupBy('address').agg(f.sum("amount"))
+    trns_4_different_address_df.show()
+
+def dataframesUnification(spark):
+
     pathlist = list( Path(DATAFRAMES_FILE_PATH).glob(f'**/*.parquet') )
     filelist = [str(file) for file in pathlist]
-    logging.info(filelist)
-    for file in filelist:
-        logging.info(os.path.splitext(file))
-        df = turnToDF(spark, file, 'parquet')
+    
+    #//////////////////////////// NORMALIZATION //////////////////////////////
+    unified_df =  renameColumns(turnToDF(spark, filelist[0], 'parquet'))
+    for i in range(len(filelist)):
+        #for file in filelist:
+        logging.info(os.path.splitext(filelist[i]))
+        df = turnToDF(spark, filelist[i], 'parquet')
         df = renameColumns(df)
+        unified_df = df.unionByName(unified_df, allowMissingColumns=True)
+        
+    #/////////////////////////////////////////////////////////////////////////
+    #unified_df.printSchema()
+    #unified_df.show(400)
+    aggregations(unified_df)
 
-    spark.stop()

@@ -37,17 +37,11 @@ with DAG("data_generation", start_date=datetime(2022,1,1),
         dag=dag
     )
 
-    pull_dataframes = PythonOperator(
-            task_id="pull_dataframes",
-            python_callable= pysparkModules.pullDataframes,
+    pull_unify_aggregations_dataframes = PythonOperator(
+            task_id="pull_unify_aggregations_dataframes",
+            python_callable= pysparkModules.pullUnifyDataframes,
             op_kwargs={"table_names":["customer","transaction"],"extra_formats":["json","parquet"]},
             trigger_rule='all_success'
         )
-    dataframes_unification = PythonOperator(
-            task_id="dataframes_unification",
-            python_callable= pysparkModules.dataframesUnification,
-            op_kwargs={},
-            trigger_rule='all_success'
-        )
 
-    dataMainGeneration>>pull_dataframes>>dataframes_unification
+    dataMainGeneration>>pull_unify_aggregations_dataframes

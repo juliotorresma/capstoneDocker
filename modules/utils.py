@@ -7,8 +7,22 @@ from faker.providers.person.en import Provider
 from faker.providers.address import Provider as prcity
 import faker
 from faker import Faker
+import logging
+FILE_PATH = '/opt/airflow/generatedData'
 
-def randomlistIdCostumer(size):
+def reset(flag, day_dif):
+    if flag:
+        deleteFiles(FILE_PATH,".json")
+        deleteFiles(FILE_PATH,".parquet")
+        date_object = systemDate()
+        step = datetime.timedelta(days=day_dif)
+        date_object -= step
+
+        system_date = open("/opt/airflow/modules/initial_date.txt", "w")
+        system_date.write(f"{date_object.strftime('%d-%m-%YT%H:%M:%S')}")
+        system_date.close()
+
+def randomlistIdCostumer(size, days_difference = 0):
     return random.sample(range(1000, size+1000), size)
 
 def randomlistID(begin, size):
@@ -27,16 +41,35 @@ def randomCities(size):
     return final_list # random.choice(list_20_cities)
 
 def listTimeStamp(size):
-    dt = datetime.datetime(2021, 12, 1)
+
+    date_object = systemDate()
     step = datetime.timedelta(minutes=5)
     result = []
     for i in range(size):
-        result.append(dt.strftime("%d-%m-%YT%H:%M:%S"))
-        dt += step
+        result.append(date_object.strftime("%d-%m-%YT%H:%M:%S"))
+        date_object += step
     return result
 
-def timeStamp():
-    return datetime.now().timestamp()
+def todaysDate():
+    return datetime.datetime.now()
+
+def systemDate():
+    f = open("/opt/airflow/modules/initial_date.txt", "r")
+    date = datetime.datetime.strptime(f.read(), "%d-%m-%YT%H:%M:%S")
+    f.close()
+    return date
+
+def updateDate():
+    date_object = systemDate()
+    step = datetime.timedelta(days=1)
+    date_object += step
+
+    system_date = open("/opt/airflow/modules/initial_date.txt", "w")
+    system_date.write(f"{date_object.strftime('%d-%m-%YT%H:%M:%S')}")
+    system_date.close()
+    logging.info(f"Updated date to {date_object.strftime('%d-%m-%YT%H:%M:%S')}")
+    return 
+
 
 def getFirstNames(size):
     first_names = list(set(Provider.first_names))

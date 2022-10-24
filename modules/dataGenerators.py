@@ -18,15 +18,18 @@ from airflow.hooks.postgres_hook import PostgresHook
 
 FILE_PATH = '/opt/airflow/generatedData'
 
-def rdbmsGeneration(size):
+def rdbmsGeneration(size, reset = False, days_difference = 0):
     #Establishing the connection
     conn = psycopg2.connect(
     database="airflow", user='airflow', password='airflow', host='host.docker.internal', port= '5432')
     #Creating a cursor object using the cursor() method
     cursor = conn.cursor()
 
+    if reset:
+        cursor.execute("DROP TABLE IF EXISTS transaction")
+        cursor.execute("DROP TABLE IF EXISTS customer")
     #Doping Transaction table if already exists.
-    cursor.execute("DROP TABLE IF EXISTS transaction")
+    
     #Creating table as per requirement
     sql ='''CREATE TABLE transaction(
     id INT PRIMARY KEY,
@@ -35,7 +38,7 @@ def rdbmsGeneration(size):
     Amount INT)
     '''
     cursor.execute(sql)
-    cursor.execute("DROP TABLE IF EXISTS customer")
+    
     #Creating table as per requirement
     sql ='''CREATE TABLE customer(
     id INT PRIMARY KEY,
@@ -47,7 +50,7 @@ def rdbmsGeneration(size):
     cursor.execute(sql)
 
     
-    id_list_transaction = utils.randomlistID(size + 101, size)
+    id_list_transaction = utils.randomlistID(days_difference * size * 3, size)
     id_list_costumer = utils.randomlistID(1, size)
     time_stamp = utils.listTimeStamp(size)
     first_names = utils.getFirstNames(size)
@@ -76,8 +79,8 @@ def rdbmsGeneration(size):
 
     return 
 
-def parquetDataGenerator(size):
-    id_list = utils.randomlistID(size+1, size)
+def parquetDataGenerator(size, days_difference = 0):
+    id_list = utils.randomlistID((days_difference * size * 3) + 100, size)
     time_stamp = utils.listTimeStamp(size)
     first_names = utils.getFirstNames(size)
     last_names = utils.getLastNames(size)
@@ -88,21 +91,21 @@ def parquetDataGenerator(size):
         frame.append([id_list[i], first_names[i], last_names[i], amounts[i], time_stamp[i], store_ids[i]])
 
     df = pd.DataFrame(frame, columns =['Id', 'First_name', 'Last_name', 'Amount', 'ts', 'Store_id'])
-    utils.deleteFiles(FILE_PATH,".parquet")
-    df.to_parquet(f'{FILE_PATH}/{datetime.now().strftime("%d-%m-%Y")}.parquet') 
+    #utils.deleteFiles(FILE_PATH,".parquet")
+    df.to_parquet(f'{FILE_PATH}/{utils.systemDate().strftime("%d-%m-%Y")}.parquet') 
 
     return 
 
-def jsonDataGenerator(size):
-    id_list = utils.randomlistID(1, size)
+def jsonDataGenerator(size, days_difference = 0):
+    id_list = utils.randomlistID((days_difference * size * 3) + 200, size)
     time_stamp = utils.listTimeStamp(size)
     first_names = utils.getFirstNames(size)
     last_names = utils.getLastNames(size)
     amounts = utils.getRandomAmounts(size)
     types = utils.generateRandomTypes(size)
-    utils.deleteFiles(FILE_PATH,".json")
+    #utils.deleteFiles(FILE_PATH,".json")
 
-    with open(f'{FILE_PATH}/{datetime.now().strftime("%d-%m-%Y")}.json', 'w') as f:
+    with open(f'{FILE_PATH}/{utils.systemDate().strftime("%d-%m-%Y")}.json', 'w') as f:
         for i in range(size):
             json_format = {"id":id_list[i],
                         "ts":time_stamp[i],
@@ -117,8 +120,15 @@ def jsonDataGenerator(size):
     return 
 
 def mainGenerator(size):
-    jsonDataGenerator(size)
-    parquetDataGenerator(size)
-    rdbmsGeneration(size)
+    utils.reset(True,5)
+
+    today_date = utils.todaysDate()
+    i = 0
+    while systemDate() < today_date:
+        jsonDataGenerator(size, i)
+        parquetDataGenerator(size, i)
+        rdbmsGeneration(size,True, i)
+        utils.updateDate()
+        i+=1
      
 

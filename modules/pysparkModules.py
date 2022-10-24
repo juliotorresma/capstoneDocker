@@ -10,6 +10,7 @@ import logging
 from pathlib import Path # Find certain directories.
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
+from pyspark.sql.functions import col, unix_timestamp, to_date
 from pyspark.sql.types import StructType,StructField, StringType, IntegerType
 DATAFRAMES_FILE_PATH = '/opt/airflow/dataFrames'
 RAW_DATA_FILE_PATH = '/opt/airflow/generatedData'
@@ -19,7 +20,7 @@ findspark.find()
 
 aka_dictionary = {  "id":["transaction_id","id"],
                     "customer_id":["customer_id"],
-                    "ts":["Transaction_ts", "ts"],
+                    "ts":["transaction_ts", "ts"],
                     "customer_first_name":["first_name","customer_first_name"],
                     "customer_last_name":["customer_last_name", "last_name"],
                     "phone_number":["phone_number", "number"],
@@ -90,9 +91,17 @@ def pullDataframe_Pg(spark, table_names):
         .option("driver", "org.postgresql.Driver")\
         .option("dbtable",table_names[1]).option("user","airflow").option("password","airflow").load()
 
-    merged = df1.join(df2, "id")
 
-    merged.write.parquet(f"/opt/airflow/dataFrames/add_date")
+    
+    merged = df1.join(df2, "id")
+    
+    
+    
+    merged.show()
+    #merged2 = merged1.withColumn("test", f.date_format('Transaction_ts', 'dd-MM-yyyy'))
+    #merged.withColumn("Transaction_ts", f.to_timestamp("Transaction_ts", "dd-MM-yyyy'T'HH:mm:ss").alias('date'))
+
+    merged.write.parquet(f"/opt/airflow/dataFrames/RDBMS")
     
 def pullExtraFormatDataframes(spark, extra_formats):
     for format in extra_formats:
@@ -117,21 +126,21 @@ def pullUnifyDataframes(table_names, extra_formats):
 
 def aggregations(unified_df):
     #Count and sum amount transactions for each type (online or offline(in store)) for day
-    trns_4_trans_type = unified_df.select('transaction_type','amount').where(unified_df.transaction_type.isNotNull())
+    trns_4_trans_type = unified_df.select('transaction_type','ts','amount').where((unified_df.transaction_type.isNotNull()) & (unified_df.ts.isNotNull()))
 
     #Count and sum amount transactions for each city (city can be extracted from address) for day
-    trns_4_address = unified_df.select('address','amount').where(unified_df.address != 'null')
+    trns_4_address = unified_df.select('address','ts','amount').where((unified_df.address.isNotNull()) & (unified_df.ts.isNotNull()))
 
     #Count and sum amount transactions for each store for day
-    trns_4_store = unified_df.select('store_id','amount').where(unified_df.store_id.isNotNull())
+    trns_4_store = unified_df.select('store_id','ts','amount').where((unified_df.store_id.isNotNull()) & (unified_df.ts.isNotNull()))
 
-    sum_trans_type_df = trns_4_trans_type.groupBy('transaction_type').agg(f.sum("amount"),f.count("transaction_type"))
+    sum_trans_type_df = trns_4_trans_type.groupBy('transaction_type','ts').agg(f.sum("amount"),f.count("transaction_type"))
     sum_trans_type_df.show()
 
-    trns_4_store_df = trns_4_store.groupBy('store_id').agg(f.sum("amount"),f.count("store_id"))
+    trns_4_store_df = trns_4_store.groupBy('store_id','ts').agg(f.sum("amount"),f.count("store_id"))
     trns_4_store_df.show()
 
-    trns_4_different_address_df = trns_4_address.groupBy('address').agg(f.sum("amount"))
+    trns_4_different_address_df = trns_4_address.groupBy('address','ts').agg(f.sum("amount"))
     trns_4_different_address_df.show()
 
 def dataframesUnification(spark):
@@ -147,7 +156,7 @@ def dataframesUnification(spark):
         df = turnToDF(spark, filelist[i], 'parquet')
         df = renameColumns(df)
         unified_df = df.unionByName(unified_df, allowMissingColumns=True)
-        
+    unified_df = unified_df.withColumn('ts', f.split(unified_df['ts'], 'T').getItem(0))    
     #/////////////////////////////////////////////////////////////////////////
     #unified_df.printSchema()
     #unified_df.show(400)

@@ -68,4 +68,14 @@ docker-compose up
 
 ## Usage
 
+* Go to http://localhost:8080
+
+* Login with User: airflow and Password: airflow in Airflow Gui.
+
+* Turn on the "data_generation" DAG and open it.
 ![Step # 1](https://github.com/juliotorresma/capstoneDocker/blob/main/img/1.png?raw=true)
+![Step # 2](https://github.com/juliotorresma/capstoneDocker/blob/main/img/2.png?raw=true)
+
+* Trigger your dag.
+![Step # 3](https://github.com/juliotorresma/capstoneDocker/blob/main/img/3.png?raw=true)
+

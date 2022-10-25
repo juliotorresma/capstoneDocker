@@ -27,22 +27,22 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
 
 * JSON structure:
 {
-- ‘id’:1,
-- “ts”: 2022--06-06T22:06:06, 
-- “Customer_first_name” : “test”
-- “Customer_last_name”: “test”,
-- “Amount”: 1000
-- “Type” : “0” # 0 - in_store, 1-online	
+  - ‘id’:1,
+  - “ts”: 2022--06-06T22:06:06, 
+  - “Customer_first_name” : “test”
+  - “Customer_last_name”: “test”,
+  - “Amount”: 1000
+  - “Type” : “0” # 0 - in_store, 1-online	
 }
 
 * Parquet structure:
   - Id: int
-	- Customer: Struct
-		- First_name: String
-		- Last_name: String
-	- Amount: int
-	- ts: timestamp,
-	- Store_id: int
+- Customer: Struct
+	- First_name: String
+	- Last_name: String
+- Amount: int
+- ts: timestamp,
+- Store_id: int
 
 
 ## Installation

@@ -47,7 +47,12 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
 
 
 ## Stages:
-* Create data generators : Create data using the 3 formats. Create around 100 entries for each format and for a total of 3 days. 
+<ol>
+
+<li>Create data generators : Create data using the 3 formats. Create around 100 entries for each format and for a total of 3 days. </li>
+
+</ol>
+
 * Integrate tools: You can use RDBMS (Postresql, or MySQL) + Spark locally, or you can also choose Docker Desktop or Cloud. 
 
 * Once tools are installed and can communicate please perform the following aggregations in the Aggregations section, and save in the target folder (simulating the Data Warehouse). Make sure the aggregations are performed with at least 3 partitions (you will notice this when saving the data in parquet, you should have 3 files).

@@ -52,6 +52,9 @@ def listTimeStamp(size):
 
 def todaysDate():
     return datetime.datetime.now()
+def cleanTodaysDate():
+    e = datetime.datetime.now()
+    return e.strftime("%d-%m-%Y")
 
 def systemDate():
     f = open("/opt/airflow/modules/initial_date.txt", "r")

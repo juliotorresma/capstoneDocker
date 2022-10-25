@@ -1,4 +1,3 @@
-from pickle import NONE
 import sys
 sys.path.insert(1, '/opt/airflow/modules')
 import utils
@@ -82,7 +81,6 @@ def pullDataframe_Pg(spark, table_names):
 
     utils.emptyDirectory(DATAFRAMES_FILE_PATH)
 
-    
     df1 = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
         .option("driver", "org.postgresql.Driver")\
         .option("dbtable",table_names[0]).option("user","airflow").option("password","airflow").load()
@@ -90,18 +88,9 @@ def pullDataframe_Pg(spark, table_names):
     df2 = spark.read.format("jdbc" ).option("url","jdbc:postgresql://postgres:5432/airflow")\
         .option("driver", "org.postgresql.Driver")\
         .option("dbtable",table_names[1]).option("user","airflow").option("password","airflow").load()
-
-
     
     merged = df1.join(df2, "id")
-    
-    
-    
-    merged.show()
-    #merged2 = merged1.withColumn("test", f.date_format('Transaction_ts', 'dd-MM-yyyy'))
-    #merged.withColumn("Transaction_ts", f.to_timestamp("Transaction_ts", "dd-MM-yyyy'T'HH:mm:ss").alias('date'))
-
-    merged.write.parquet(f"/opt/airflow/dataFrames/RDBMS")
+    merged.write.parquet(f"{DATAFRAMES_FILE_PATH}/RDBMS")
     
 def pullExtraFormatDataframes(spark, extra_formats):
     for format in extra_formats:
@@ -136,15 +125,15 @@ def aggregations(unified_df):
 
     sum_trans_type_df = trns_4_trans_type.groupBy('transaction_type','ts').agg(f.sum("amount"),f.count("transaction_type"))
     sum_trans_type_df.show()
-    sum_trans_type_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/sum_trans_type_df")
+    sum_trans_type_df.write.mode("overwrite").parquet(f"hdfs://namenode:9000/user/root/capstone/{utils.cleanTodaysDate()}/sum_trans_type_df")
 
     trns_4_store_df = trns_4_store.groupBy('store_id','ts').agg(f.sum("amount"),f.count("store_id"))
     trns_4_store_df.show()
-    trns_4_store_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/trns_4_store_df")
+    trns_4_store_df.write.mode("overwrite").parquet(f"hdfs://namenode:9000/user/root/capstone/{utils.cleanTodaysDate()}/trns_4_store_df")
 
     trns_4_different_address_df = trns_4_address.groupBy('address','ts').agg(f.sum("amount"))
     trns_4_different_address_df.show()
-    trns_4_different_address_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/trns_4_different_address_df")
+    trns_4_different_address_df.write.mode("overwrite").parquet(f"hdfs://namenode:9000/user/root/capstone/{utils.cleanTodaysDate()}/trns_4_different_address_df")
 
 def dataframesUnification(spark):
 
@@ -164,4 +153,3 @@ def dataframesUnification(spark):
     #unified_df.printSchema()
     #unified_df.show(400)
     aggregations(unified_df)
-

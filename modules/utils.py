@@ -11,13 +11,16 @@ import logging
 FILE_PATH = '/opt/airflow/generatedData'
 
 def reset(flag, day_dif):
+    '''
+    FUNCTION RESPONSABLE OF DELETING ALL TEMPORARY FILES IN ./dataGenerators 
+    AND RESET THE INITIAL DATE
+    '''
     if flag:
         deleteFiles(FILE_PATH,".json")
         deleteFiles(FILE_PATH,".parquet")
         date_object = systemDate()
         step = datetime.timedelta(days=day_dif)
         date_object -= step
-
         system_date = open("/opt/airflow/modules/initial_date.txt", "w")
         system_date.write(f"{date_object.strftime('%d-%m-%YT%H:%M:%S')}")
         system_date.close()
@@ -38,7 +41,7 @@ def randomCities(size):
             contador += len(list_20_cities) 
         final_list.append(list_20_cities[i - contador])
     shuffle(final_list)
-    return final_list # random.choice(list_20_cities)
+    return final_list
 
 def listTimeStamp(size):
 
@@ -52,17 +55,24 @@ def listTimeStamp(size):
 
 def todaysDate():
     return datetime.datetime.now()
+
 def cleanTodaysDate():
     e = datetime.datetime.now()
     return e.strftime("%d-%m-%Y")
 
 def systemDate():
+    '''
+    READ DATE FROM INITIAL_DATE.TXT
+    '''
     f = open("/opt/airflow/modules/initial_date.txt", "r")
     date = datetime.datetime.strptime(f.read(), "%d-%m-%YT%H:%M:%S")
     f.close()
     return date
 
 def updateDate():
+    '''
+    UPDATE DATE IN INITIAL_DATE.TXT
+    '''
     date_object = systemDate()
     step = datetime.timedelta(days=1)
     date_object += step
@@ -72,7 +82,6 @@ def updateDate():
     system_date.close()
     logging.info(f"Updated date to {date_object.strftime('%d-%m-%YT%H:%M:%S')}")
     return 
-
 
 def getFirstNames(size):
     first_names = list(set(Provider.first_names))

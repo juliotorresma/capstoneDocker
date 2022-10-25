@@ -51,7 +51,9 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
 
 ```bash
-pip install foobar
+git clone https://github.com/juliotorresma/capstoneDocker.git
+
+docker-compose build
 ```
 
 ## Usage

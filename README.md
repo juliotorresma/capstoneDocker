@@ -6,9 +6,9 @@ As a Data Engineer you will need to design and implement some part of the data p
 We have 3 sources of data that need to be ingested. These sources are updated every day around 12PM.
 
 * We have following sources:
-  *RDBMS (Postresql, or MySQL) (WEB) 
-  *Parquet files (MOBILE APP) 
-  *Json files (PHYSICAL STORE) 
+  **RDBMS (Postresql, or MySQL) (WEB) 
+  **Parquet files (MOBILE APP) 
+  **Json files (PHYSICAL STORE) 
 
 
 ## Installation

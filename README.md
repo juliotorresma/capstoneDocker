@@ -90,3 +90,4 @@ docker-compose up
 
 ## There you can found your aggregations saved in a partition for each day.
 ![Step # 8](https://github.com/juliotorresma/capstoneDocker/blob/main/img/8.png?raw=true)
+![Step # 9](https://github.com/juliotorresma/capstoneDocker/blob/main/img/9.png?raw=true)

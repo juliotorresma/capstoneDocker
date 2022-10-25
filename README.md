@@ -60,6 +60,12 @@ git clone https://github.com/juliotorresma/capstoneDocker.git
 docker-compose build
 ```
 
+* Run the project.
+
+```bash
+docker-compose up.
+```
+
 ## Usage
 
 ```python

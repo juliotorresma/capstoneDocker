@@ -48,13 +48,13 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
 
 ## Installation
 
-Clone this repository.
+* Clone this repository.
 
 ```bash
 git clone https://github.com/juliotorresma/capstoneDocker.git
 ```
 
-Build the project (Install Airflow image with Java Included for PySpark).
+* Build the project (Install Airflow image with Java Included for PySpark).
 
 ```bash
 docker-compose build

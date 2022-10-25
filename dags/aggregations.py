@@ -27,7 +27,7 @@ FILE_PATH = '/opt/airflow/generatedData'
 SIZE = 100
 
 with DAG("data_generation", start_date=datetime(2022,1,1),
-    schedule_interval="@once", catchup=False) as dag:
+    schedule_interval="@hourly", catchup=False) as dag:
 
    
     dataMainGeneration = PythonOperator(

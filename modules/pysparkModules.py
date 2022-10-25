@@ -136,12 +136,15 @@ def aggregations(unified_df):
 
     sum_trans_type_df = trns_4_trans_type.groupBy('transaction_type','ts').agg(f.sum("amount"),f.count("transaction_type"))
     sum_trans_type_df.show()
+    sum_trans_type_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/sum_trans_type_df")
 
     trns_4_store_df = trns_4_store.groupBy('store_id','ts').agg(f.sum("amount"),f.count("store_id"))
     trns_4_store_df.show()
+    trns_4_store_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/trns_4_store_df")
 
     trns_4_different_address_df = trns_4_address.groupBy('address','ts').agg(f.sum("amount"))
     trns_4_different_address_df.show()
+    trns_4_different_address_df.write.mode("overwrite").parquet("hdfs://namenode:9000/user/root/capstone/trns_4_different_address_df")
 
 def dataframesUnification(spark):
 

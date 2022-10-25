@@ -72,21 +72,21 @@ docker-compose up
 
 * Login with User: airflow and Password: airflow in Airflow Gui.
 
-## * Turn on the "data_generation" DAG and open it.
+## Turn on the "data_generation" DAG and open it.
 ![Step # 1](https://github.com/juliotorresma/capstoneDocker/blob/main/img/1.png?raw=true)
 ![Step # 2](https://github.com/juliotorresma/capstoneDocker/blob/main/img/2.png?raw=true)
 
-## * Trigger your dag.
+## Trigger your dag.
 ![Step # 4](https://github.com/juliotorresma/capstoneDocker/blob/main/img/4.png?raw=true)
 
-## * Wait for your DAG to complete its tasks (you can see the second task Log with the data aggregations).
+## Wait for your DAG to complete its tasks (you can see the second task Log with the data aggregations).
 ![Step # 5](https://github.com/juliotorresma/capstoneDocker/blob/main/img/5.png?raw=true)
 ![Step # 6](https://github.com/juliotorresma/capstoneDocker/blob/main/img/6.png?raw=true)
 
-### * Go to http://localhost:9870
+## Go to http://localhost:9870
 
-## * Go to Hadoop Home - > Utilities -> Browse the file system.
+## Go to Hadoop Home - > Utilities -> Browse the file system.
 ![Step # 7](https://github.com/juliotorresma/capstoneDocker/blob/main/img/7.png?raw=true)
 
-## * There you can found your aggregations saved in a partition for each day.
+## There you can found your aggregations saved in a partition for each day.
 ![Step # 7](https://github.com/juliotorresma/capstoneDocker/blob/main/img/7.png?raw=true)

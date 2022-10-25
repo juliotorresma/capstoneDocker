@@ -50,18 +50,13 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
 <ol>
 
 <li>Create data generators : Create data using the 3 formats. Create around 100 entries for each format and for a total of 3 days. </li>
+<li>Integrate tools: You can use RDBMS (Postresql, or MySQL) + Spark locally, or you can also choose Docker Desktop or Cloud. </li>
+<li>Once tools are installed and can communicate please perform the following aggregations in the Aggregations section, and save in the target folder (simulating the Data Warehouse). Make sure the aggregations are performed with at least 3 partitions (you will notice this when saving the data in parquet, you should have 3 files).</li>
+<li>Save the unificated dataset and save the aggregate tables. Save as csv(for debugging purposes) and as parquet . </li>
+<li>Install Airflow or integrate in Docker / Cloud, then schedule the Spark execution to Aggregate the data of the first day in one hour, next day the next hour, last day the following hour. </li>
+<li>Install HDFS or use Docker / Cloud and configure spark jobs to save the resulting data there. </li>
 
 </ol>
-
-* Integrate tools: You can use RDBMS (Postresql, or MySQL) + Spark locally, or you can also choose Docker Desktop or Cloud. 
-
-* Once tools are installed and can communicate please perform the following aggregations in the Aggregations section, and save in the target folder (simulating the Data Warehouse). Make sure the aggregations are performed with at least 3 partitions (you will notice this when saving the data in parquet, you should have 3 files).
-
-* Save the unificated dataset and save the aggregate tables. Save as csv(for debugging purposes) and as parquet . 
-
-* Install Airflow or integrate in Docker / Cloud, then schedule the Spark execution to Aggregate the data of the first day in one hour, next day the next hour, last day the following hour. 
-
-* Install HDFS or use Docker / Cloud and configure spark jobs to save the resulting data there. 
 
 ## Aggregations:
 

@@ -10,21 +10,39 @@ We have 3 sources of data that need to be ingested. These sources are updated ev
   - Parquet files (MOBILE APP) 
   - Json files (PHYSICAL STORE) 
 
-$ ./tree-md .
-# Project tree
+## Data Schemas:
 
-.
- * [tree-md](./tree-md)
- * [dir2](./dir2)
-   * [file21.ext](./dir2/file21.ext)
-   * [file22.ext](./dir2/file22.ext)
-   * [file23.ext](./dir2/file23.ext)
- * [dir1](./dir1)
-   * [file11.ext](./dir1/file11.ext)
-   * [file12.ext](./dir1/file12.ext)
- * [file_in_root.ext](./file_in_root.ext)
- * [README.md](./README.md)
- * [dir3](./dir3)
+* RDBMS tables:
+  - Transaction
+	    - id int,
+	    - Cus- omer_id int,
+	    - Transaction_ts timestamp,
+	    - Amount int
+  - Customer
+	  - Id int,
+	  - First_name int,
+	  - Last_name int,
+	  - Phone_number int,
+	  - Address string
+
+* JSON structure:
+{
+- ‘id’:1,
+- “ts”: 2022--06-06T22:06:06, 
+- “Customer_first_name” : “test”
+- “Customer_last_name”: “test”,
+- “Amount”: 1000
+- “Type” : “0” # 0 - in_store, 1-online	
+}
+
+* Parquet structure:
+  - Id: int
+	- Customer: Struct
+		- First_name: String
+		- Last_name: String
+	- Amount: int
+	- ts: timestamp,
+	- Store_id: int
 
 
 ## Installation

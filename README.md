@@ -68,4 +68,4 @@ docker-compose up
 
 ## Usage
 
-![Step # 1](https://github.com/juliotorresma/capstoneDocker/img/1.png?raw=true)
+![Step # 1](https://github.com/juliotorresma/capstoneDocker/blob/main/img/1.png?raw=true)
